@@ -26,10 +26,7 @@ jobs:
       # 3. Build backend
       
       - name: Build backend image
-        run: docker build \
-                -f springboot/app/Dockerfile \
-                -t ${{ secrets.DOCKERHUB_USERNAME }}/tp-backend:latest \
-                springboot
+        run: docker build -f springboot/app/Dockerfile -t ${{ secrets.DOCKERHUB_USERNAME }}/tp-backend:latest springboot
 
       # 4. Build frontend
       - name: Build frontend image
