@@ -1,0 +1,48 @@
+name: Build & Push Docker Images
+
+on:
+  push:
+    branches:
+      - master
+      - main
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build backend
+        run: docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/tp-backend:latest ./springboot
+
+      - name: Build frontend
+        run: docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/tp-frontend:latest ./angular-app
+
+      - name: Push backend
+        run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/tp-backend:latest
+
+      - name: Push frontend
+        run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/tp-frontend:latest
+
+      - name: Test app
+        run: |
+          docker-compose up -d
+          sleep 10
+          docker ps
+
+      - name: Test backend
+        run: curl -I http://localhost:8080
+
+      - name: Test frontend
+        run: curl -I http://localhost:4200
+
+      - name: Stop app
+        run: docker-compose down
