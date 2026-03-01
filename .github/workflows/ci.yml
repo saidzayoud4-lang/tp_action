@@ -3,59 +3,57 @@ name: Build & Push Docker Images
 on:
   push:
     branches:
-      - master
       - main
+      - master
 
 jobs:
   docker:
     runs-on: ubuntu-latest
 
     steps:
-      # 1) Récupérer le code du repo
+      # 1. Récupérer le code
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # 2) Se connecter à Docker Hub avec les secrets GitHub
+      # 2. Connexion à Docker Hub via secrets
       - name: Login to Docker Hub
         uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      # 3) Build image backend
+      # 3. Build backend
       - name: Build backend image
-        run: |
-          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/tp-backend:latest ./springboot
+        run: docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/tp-backend:latest ./springboot
 
-      # 4) Build image frontend
+      # 4. Build frontend
       - name: Build frontend image
-        run: |
-          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/tp-frontend:latest ./angular-app
+        run: docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/tp-frontend:latest ./angular-app
 
-      # 5) Push backend vers Docker Hub
+      # 5. Push backend vers Docker Hub
       - name: Push backend
         run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/tp-backend:latest
 
-      # 6) Push frontend vers Docker Hub
+      # 6. Push frontend vers Docker Hub
       - name: Push frontend
         run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/tp-frontend:latest
 
-      # 7) Tester avec docker-compose
-      - name: Test app with docker-compose
+      # 7. Test de l'application avec docker compose
+      - name: Launch docker compose
         run: |
-          docker-compose up -d
-          sleep 10
+          docker compose up -d
+          sleep 12
           docker ps
 
-      # 8) Test backend API
+      # 8. Test backend
       - name: Test backend
         run: curl -I http://localhost:8080
 
-      # 9) Test frontend
+      # 9. Test frontend
       - name: Test frontend
         run: curl -I http://localhost:4200
 
-      # 10) Arrêt des conteneurs
+      # 10. Arrêt des conteneurs
       - name: Stop app
         if: always()
-        run: docker-compose down
+        run: docker compose down
