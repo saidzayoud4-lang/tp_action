@@ -1,0 +1,73 @@
+name: CI-CD Pipeline 
+
+on:
+  push:
+    branches: ["master"]
+
+jobs:
+  build-test-deploy:
+    runs-on: ubuntu-latest
+
+    env:
+      BACK_IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/springboot-app
+      FRONT_IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/angular-app
+      TAG: latest
+
+    steps:
+      # --- Étape 1 : Récupération du code ---
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # --- Étape 2 : Connexion à Docker Hub (via secrets) ---
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      # (Optionnel) Buildx pour des builds plus fiables/rapides
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # --- Étape 3 : Build des images ---
+      - name: Build backend image
+        run: |
+          docker build -t ${BACK_IMAGE}:${TAG} ./springboot-app
+
+      - name: Build frontend image
+        run: |
+          docker build -t ${FRONT_IMAGE}:${TAG} ./angular-app
+
+      # --- Étape 4 : Push des images ---
+      - name: Push backend image
+        run: docker push ${BACK_IMAGE}:${TAG}
+
+      - name: Push frontend image
+        run: docker push ${FRONT_IMAGE}:${TAG}
+
+      # --- Étape 5 : Test de l'application avec Docker Compose ---
+      - name: Start application with docker-compose
+        run: |
+          docker-compose up -d
+          # Petite attente pour laisser démarrer les services
+          sleep 15
+
+      # --- Étape 6 : Vérifier que les conteneurs tournent ---
+      - name: Check running containers
+        run: docker ps
+
+      # --- Étape 7 : Vérifier que backend & frontend répondent ---
+      - name: Test backend is responding
+        run: |
+          set -e
+          curl -fsS http://localhost:8081 || (docker-compose logs && exit 1)
+
+      - name: Test frontend is responding
+        run: |
+          set -e
+          curl -fsS http://localhost:4200 || (docker-compose logs && exit 1)
+
+      # --- Étape 8 : Nettoyage ---
+      - name: Docker Compose down
+        if: always()
+        run: docker-compose down -v
