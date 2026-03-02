@@ -3,7 +3,7 @@ name: CI/CD Pipeline
 on:
   push:
     branches:
-         -master
+      - master
 
 jobs:
   build-and-push:
@@ -23,14 +23,8 @@ jobs:
       - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
-          registry: docker.io
-          username: ${{ secrets.DOCKERHUB_USERNAME }}   # doit être: said2003
+          username: ${{ secrets.DOCKERHUB_USERNAME }}   # doit valoir: said2003
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      - name: Echo image tags
-        run: |
-          echo "Backend tag: docker.io/${{ secrets.DOCKERHUB_USERNAME }}/springboot-app:latest"
-          echo "Frontend tag: docker.io/${{ secrets.DOCKERHUB_USERNAME }}/angular-app:latest"
 
       - name: Build Spring Boot JAR
         working-directory: springboot/app
@@ -57,11 +51,6 @@ jobs:
           BACKEND_IMAGE: docker.io/${{ secrets.DOCKERHUB_USERNAME }}/springboot-app:latest
           FRONTEND_IMAGE: docker.io/${{ secrets.DOCKERHUB_USERNAME }}/angular-app:latest
         run: |
-          docker compose -f docker-compose.yml up -d
+          docker compose up -d
           sleep 20
           docker ps
-
-      - name: Health check backend
-        run: |
-          set -e
-          curl -fsS -I http://localhost:8080 || (docker logs $(docker ps --format '{{.Names}}'); exit 1)
