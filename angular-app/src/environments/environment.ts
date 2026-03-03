@@ -4,5 +4,5 @@ export const environment :
 }
 = {
     production: false,
-    apiUrl: "http://51.45.52.254:8081/user"
+    apiUrl: 'http://51.45.52.254:8081'
   };
