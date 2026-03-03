@@ -52,5 +52,4 @@ jobs:
           FRONTEND_IMAGE: docker.io/${{ secrets.DOCKERHUB_USERNAME }}/angular-app:latest
         run: |
           docker compose up -d
-          sleep 20
           docker ps
