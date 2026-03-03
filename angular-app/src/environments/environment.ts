@@ -4,4 +4,5 @@ export const environment :
 }
 = {
     production: false,
+    apiUrl: "http://13.237.112.69:8081/user"
   };
